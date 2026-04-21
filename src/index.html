@@ -1,64 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recipe Graph DB</title>
-  <link rel="stylesheet" href="public/css/style.css">
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Recipe Graph DB</title>
+        <link rel="stylesheet" href="public/css/style.css" />
+    </head>
+    <body>
+        <header>
+            <h1>Recipe Graph Database</h1>
+            <p>CS-3600 — Blondell &amp; Osborn</p>
+        </header>
 
-<header>
-  <h1>Recipe Graph Database</h1>
-  <p>CS-3600 — Blondell &amp; Osborn</p>
-</header>
+        <div class="controls">
+            <input
+                type="text"
+                id="search-input"
+                placeholder="Search by name..."
+            />
+            <select id="type-filter">
+                <option value="">All types</option>
+            </select>
+            <span id="node-count">Loading...</span>
+        </div>
 
-<div class="controls">
-  <input type="text" id="search-input" placeholder="Search by name...">
-  <select id="type-filter">
-    <option value="">All types</option>
-  </select>
-  <span id="node-count">Loading...</span>
-</div>
+        <div id="graph-container">
+            <svg id="graph"></svg>
+            <div id="tooltip"></div>
+        </div>
 
-<div id="graph-container">
-  <svg id="graph"></svg>
-  <div id="tooltip"></div>
-</div>
+        <!--
+    <div class="layout">
 
 
-
-<!--
-<div class="layout">
-
-  
-  <div class="panel-left">
+    <div class="panel-left">
     <div class="filters">
-      <input type="text" id="search-input" placeholder="Search by name…">
-      <select id="type-filter">
-        <option value="">All types</option>
-      </select>
+    <input type="text" id="search-input" placeholder="Search by name…">
+    <select id="type-filter">
+    <option value="">All types</option>
+    </select>
     </div>
     <div id="node-count">Loading…</div>
     <ul id="node-list"></ul>
-  </div>
+    </div>
 
-  
-  <div class="panel-right">
+
+    <div class="panel-right">
     <div id="detail-placeholder">← Select a node to see its connections</div>
     <div id="detail">
-      <h2 id="detail-name"></h2>
-      <div class="detail-type" id="detail-type"></div>
-      <h3>Connections</h3>
-      <span id="loading" style="display:none">Loading edges…</span>
-      <span id="error"   style="display:none"></span>
-      <ul id="edge-list"></ul>
+    <h2 id="detail-name"></h2>
+    <div class="detail-type" id="detail-type"></div>
+    <h3>Connections</h3>
+    <span id="loading" style="display:none">Loading edges…</span>
+    <span id="error"   style="display:none"></span>
+    <ul id="edge-list"></ul>
     </div>
-  </div>
+    </div>
 
-</div>
--->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-<script src="script.js"></script>
-</body>
+    </div>
+    -->
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+        <script src="scripts/script.js"></script>
+    </body>
 </html>
