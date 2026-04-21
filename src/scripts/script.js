@@ -48,157 +48,150 @@ function clearGraph() {
   nodeGroup.selectAll("*").remove();
 }
 
-// ── Draw nodes and edges ───────────────────────────────────────────────────
 function drawGraph(nodes, edges) {
   clearGraph();
 
-  const width = document.getElementById("graph-container").clientWidth;
-  const height = document.getElementById("graph-container").clientHeight;
+  const container = document.getElementById("graph-container");
+  const width = container.clientWidth;
+  const height = container.clientHeight;
 
+  if (nodes.length === 0) return;
+
+  // ── Grid Layout for Search Results (No Edges) ──
   if (edges.length === 0) {
-    // Search results — arrange in a grid, no edges
     const cols = Math.ceil(Math.sqrt(nodes.length));
-    const spacingX = Math.min(width / (cols + 1), 150);
-    const spacingY = Math.min(
-      height / (Math.ceil(nodes.length / cols) + 1),
-      150,
-    );
-    nodes.forEach((n, i) => {
-      n.x = spacingX * ((i % cols) + 1);
-      n.y = spacingY * (Math.floor(i / cols) + 1);
-    });
+    const spacingX = Math.min(width / (cols + 1), 180);
+    const spacingY = 120;
 
     const node = nodeGroup
       .selectAll(".node")
       .data(nodes, (d) => d.node_id)
       .join("g")
       .attr("class", "node")
-      .attr("transform", (d) => `translate(${d.x},${d.y})`)
+      .attr("transform", (d, i) => {
+        const x = spacingX * ((i % cols) + 1);
+        const y = spacingY * (Math.floor(i / cols) + 1);
+        return `translate(${x},${y})`;
+      })
       .on("click", (event, d) => expandNode(d))
-      .on("mouseover", (event, d) => showTooltip(event, d))
+      .on("mouseover", showTooltip)
       .on("mouseout", hideTooltip);
 
-    node
-      .append("circle")
-      .attr("r", (d) =>
-        (d.node_type || "").toLowerCase() === "recipe" ? 18 : 12,
-      )
-      .attr("fill", (d) => nodeColor(d.node_type))
-      .attr("stroke", (d) => d3.color(nodeColor(d.node_type)).brighter(1));
-
-    node
-      .append("text")
-      .text((d) =>
-        d.node_name.length > 14 ? d.node_name.slice(0, 14) + "…" : d.node_name,
-      )
-      .attr("dy", 28);
-
+    renderNodeCircles(node);
     return;
   }
 
-  // ── Build tree structure from nodes and edges ──────────────────────────
-  const root = nodes[0];
+  // ── Tree Layout for Connections ──
+  // We treat the first node (the one clicked) as the root
+  const rootNode = nodes[0];
 
-  // Build a parent->children map from edges
-  const childrenMap = new Map();
-  nodes.forEach((n) => childrenMap.set(n.node_id, []));
-
+  // Build an adjacency list
+  const adj = new Map();
+  nodes.forEach((n) => adj.set(n.node_id, []));
   edges.forEach((e) => {
-    const source = nodes.find((n) => n.node_id === e.source_id);
-    const target = nodes.find((n) => n.node_id === e.target_id);
-
-    // If root is the source, target is the child
-    if (e.source_id === root.node_id && target) {
-      childrenMap
-        .get(e.source_id)
-        .push({ node: target, edge_type: e.edge_type });
-    }
-    // If root is the target, source is the child
-    else if (e.target_id === root.node_id && source) {
-      childrenMap
-        .get(e.target_id)
-        .push({ node: source, edge_type: e.edge_type });
-    }
-    // For deeper levels, source points to target
-    else if (source && target && childrenMap.has(e.source_id)) {
-      childrenMap
-        .get(e.source_id)
-        .push({ node: target, edge_type: e.edge_type });
+    // Ensure we only map edges between nodes we actually have in our list
+    if (adj.has(e.source_id) && adj.has(e.target_id)) {
+      adj.get(e.source_id).push({ to: e.target_id, label: e.edge_type });
     }
   });
 
-  // Build D3 hierarchy
-  function buildHierarchy(nodeData, visited = new Set()) {
-    visited.add(nodeData.node_id);
-    const children = (childrenMap.get(nodeData.node_id) || [])
-      .filter((c) => !visited.has(c.node.node_id))
-      .map((c) => ({
-        ...c.node,
-        edge_type: c.edge_type,
-        children: buildHierarchy(c.node, new Set(visited)).children,
-      }));
-    return { ...nodeData, children };
+  // Convert flat data to D3 hierarchy
+  function getChildren(id, visited = new Set()) {
+    visited.add(id);
+    const children = [];
+    (adj.get(id) || []).forEach((edge) => {
+      if (!visited.has(edge.to)) {
+        const childNode = nodes.find((n) => n.node_id === edge.to);
+        if (childNode) {
+          children.push({
+            ...childNode,
+            edge_type: edge.label,
+            children: getChildren(edge.to, new Set(visited)),
+          });
+        }
+      }
+    });
+    return children;
   }
 
-  const hierarchy = d3.hierarchy(buildHierarchy(root));
+  const hierarchyData = {
+    ...rootNode,
+    children: getChildren(rootNode.node_id),
+  };
 
-  // ── D3 tree layout ─────────────────────────────────────────────────────
-  const treeLayout = d3.tree().size([width - 100, height - 150]);
+  const root = d3.hierarchy(hierarchyData);
+  const treeLayout = d3.tree().size([width - 200, height - 200]);
+  treeLayout(root);
 
-  treeLayout(hierarchy);
+  // Center the tree in the view
+  const offsetX = 100;
+  const offsetY = 50;
 
-  // ── Draw edges ──
+  // Links
   linkGroup
     .selectAll(".link")
-    .data(hierarchy.links())
+    .data(root.links())
     .join("path")
     .attr("class", "link")
     .attr("fill", "none")
+    .attr("stroke", "#ccc")
     .attr(
       "d",
       d3
         .linkVertical()
-        .x((d) => d.x + 50)
-        .y((d) => d.y + 60),
+        .x((d) => d.x + offsetX)
+        .y((d) => d.y + offsetY),
     );
 
-  // ── Draw edge labels ──
+  // Edge Labels
   labelGroup
     .selectAll(".edge-label")
-    .data(hierarchy.links())
+    .data(root.links())
     .join("text")
     .attr("class", "edge-label")
-    .text((d) => d.target.data.edge_type || "")
-    .attr("x", (d) => (d.source.x + d.target.x) / 2 + 50)
-    .attr("y", (d) => (d.source.y + d.target.y) / 2 + 60);
+    .attr("text-anchor", "middle")
+    .attr("x", (d) => (d.source.x + d.target.x) / 2 + offsetX)
+    .attr("y", (d) => (d.source.y + d.target.y) / 2 + offsetY)
+    .text((d) => d.target.data.edge_type || "");
 
-  // ── Draw nodes ──
+  // Nodes
   const node = nodeGroup
     .selectAll(".node")
-    .data(hierarchy.descendants(), (d) => d.data.node_id)
+    .data(root.descendants(), (d) => d.data.node_id)
     .join("g")
     .attr("class", "node")
-    .attr("transform", (d) => `translate(${d.x + 50},${d.y + 60})`)
+    .attr("transform", (d) => `translate(${d.x + offsetX},${d.y + offsetY})`)
     .on("click", (event, d) => expandNode(d.data))
     .on("mouseover", (event, d) => showTooltip(event, d.data))
     .on("mouseout", hideTooltip);
 
-  node
-    .append("circle")
-    .attr("r", (d) =>
-      (d.data.node_type || "").toLowerCase() === "recipe" ? 18 : 12,
-    )
-    .attr("fill", (d) => nodeColor(d.data.node_type))
-    .attr("stroke", (d) => d3.color(nodeColor(d.data.node_type)).brighter(1));
+  renderNodeCircles(node, true);
+}
 
-  node
-    .append("text")
-    .text((d) =>
-      d.data.node_name.length > 14
-        ? d.data.node_name.slice(0, 14) + "…"
-        : d.data.node_name,
+// Helper to keep styling consistent
+function renderNodeCircles(nodeSelection, isHierarchy = false) {
+  nodeSelection
+    .append("circle")
+    .attr("r", (d) => {
+      const data = isHierarchy ? d.data : d;
+      return (data.node_type || "").toLowerCase() === "recipe" ? 20 : 14;
+    })
+    .attr("fill", (d) =>
+      nodeColor(isHierarchy ? d.data.node_type : d.node_type),
     )
-    .attr("dy", 28);
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 2);
+
+  nodeSelection
+    .append("text")
+    .attr("dy", 35)
+    .attr("text-anchor", "middle")
+    .text((d) => {
+      const name = isHierarchy ? d.data.node_name : d.node_name;
+      return name.length > 15 ? name.slice(0, 12) + "..." : name;
+    })
+    .style("font-size", "12px")
+    .style("fill", "#333");
 }
 
 // ── Load search results (no edges) ────────────────────────────────────────
