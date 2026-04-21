@@ -21,13 +21,13 @@ class NodeModel
     public function getNodes(string $type = "", string $search = ""): array
     {
         $sql = "SELECT n.node_id, n.node_type,
-                    COALESCE(r.title, i.name, ci.name, cuis.name, 'Unknown') AS node_name
-                FROM node n
-                LEFT JOIN recipe_details              r    ON n.node_id = r.node_id
-                LEFT JOIN ingredient_details          i    ON n.node_id = i.node_id
-                LEFT JOIN compound_ingredient_details ci   ON n.node_id = ci.node_id
-                LEFT JOIN cuisine_details             cuis ON n.node_id = cuis.node_id
-                WHERE 1=1";
+                        COALESCE(r.title, i.name, ci.name, cuis.name, 'Unknown') AS node_name
+                    FROM node n
+                    LEFT JOIN recipe_details              r    ON n.node_id = r.node_id
+                    LEFT JOIN ingredient_details          i    ON n.node_id = i.node_id
+                    LEFT JOIN compound_ingredient_details ci   ON n.node_id = ci.node_id
+                    LEFT JOIN cuisine_details             cuis ON n.node_id = cuis.node_id
+                    WHERE 1=1";
 
         $params = [];
         $types = "";
@@ -45,12 +45,36 @@ class NodeModel
         }
         $sql .= " ORDER BY n.node_type, node_name LIMIT 200";
 
+        // Debug: print the SQL
+        error_log(
+            "NodeModel::getNodes SQL: " .
+                $sql .
+                " | type='$type' | search='$search'",
+        );
+
         $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("NodeModel::getNodes prepare error: " . $this->db->error);
+            return [];
+        }
+
         if ($params) {
             $stmt->bind_param($types, ...$params);
         }
+
         $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        if ($stmt->error) {
+            error_log("NodeModel::getNodes execute error: " . $stmt->error);
+            return [];
+        }
+
+        $result = $stmt->get_result();
+
+        // Log how many rows we actually got
+        $num_rows = $result ? $result->num_rows : 0;
+        error_log("NodeModel::getNodes num_rows: " . $num_rows);
+
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
     public function getEdges(int $id): array
