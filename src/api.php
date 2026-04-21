@@ -1,14 +1,19 @@
 <?php
+<<<<<<< HEAD
 // ─── DB CREDENTIALS ─── swap these to match  setup ----───────────────────────
 define("DB_HOST", "localhost");
 define("DB_USER", "root");
 define("DB_PASS", "");
 define("DB_NAME", "recipedb");
 // ─────────────────────────────────────────────────────────────────────────────
+=======
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+>>>>>>> d3853f06097d547e01f4f7bf162c36db612514aa
 
-header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/mvc/NodeController.php';
 
+<<<<<<< HEAD
 $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($conn->connect_error) {
     http_response_code(500);
@@ -116,3 +121,6 @@ switch ($action) {
 }
 
 $conn->close();
+=======
+(new NodeController())->handle($_GET['action'] ?? '');
+>>>>>>> d3853f06097d547e01f4f7bf162c36db612514aa
