@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recipe Graph DB</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="public/css/style.css">
 </head>
 <body>
 
@@ -13,9 +13,25 @@
   <p>CS-3600 — Blondell &amp; Osborn</p>
 </header>
 
+<div class="controls">
+  <input type="text" id="search-input" placeholder="Search by name...">
+  <select id="type-filter">
+    <option value="">All types</option>
+  </select>
+  <span id="node-count">Loading...</span>
+</div>
+
+<div id="graph-container">
+  <svg id="graph"></svg>
+  <div id="tooltip"></div>
+</div>
+
+
+
+<!--
 <div class="layout">
 
-  <!-- Left: node browser -->
+  
   <div class="panel-left">
     <div class="filters">
       <input type="text" id="search-input" placeholder="Search by name…">
@@ -27,7 +43,7 @@
     <ul id="node-list"></ul>
   </div>
 
-  <!-- Right: node detail -->
+  
   <div class="panel-right">
     <div id="detail-placeholder">← Select a node to see its connections</div>
     <div id="detail">
@@ -41,7 +57,8 @@
   </div>
 
 </div>
-
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 define("DB_HOST", "localhost");
 define("DB_USER", "root");
 define("DB_PASS", "");
-define("DB_NAME", "recipe");
+define("DB_NAME", "recipedb");
 // ─────────────────────────────────────────────────────────────────────────────
 
 header("Content-Type: application/json");
@@ -42,7 +42,7 @@ switch ($action) {
             $types .= "s";
         }
 
-        $sql .= " ORDER BY node_type, node_name LIMIT 200";
+        $sql .= " ORDER BY node_type, node_name LIMIT 300";
 
         $stmt = $conn->prepare($sql);
         if ($params) {
