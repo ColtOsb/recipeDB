@@ -1,0 +1,109 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, sans-serif;
+  background: #fdfdfd;
+  color: #000000;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+header {
+  background: #2c5f2d;
+  color: white;
+  padding: 12px 24px;
+  flex-shrink: 0;
+}
+header h1 { font-size: 1.2rem; }
+header p  { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+  flex-shrink: 0;
+}
+.controls input, .controls select {
+  padding: 6px 10px;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  background: #1a1a2e;
+  color: #eee;
+  font-size: 0.85rem;
+}
+.controls input:focus, .controls select:focus {
+  outline: none;
+  border-color: #2c5f2d;
+}
+#node-count {
+  font-size: 0.78rem;
+  color: #888;
+  margin-left: auto;
+}
+
+#graph-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+#graph {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Nodes ── */
+.node circle {
+  stroke-width: 2px;
+  cursor: pointer;
+  transition: r 0.15s;
+}
+.node text {
+  font-size: 11px;
+  fill: #000000;
+  pointer-events: none;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.node.dimmed circle { opacity: 0.15; }
+.node.dimmed text   { opacity: 0.1;  }
+.node.highlighted circle { stroke: white; stroke-width: 3px; }
+
+/* ── Edges ── */
+.link {
+  stroke: #444;
+  stroke-width: 1.5px;
+  stroke-opacity: 0.6;
+  transition: stroke 0.15s;
+}
+.link.dimmed     { stroke-opacity: 0.05; }
+.link.highlighted { stroke: #c8f135; stroke-opacity: 1; stroke-width: 2.5px; }
+
+.edge-label {
+  font-size: 9px;
+  fill: #000000;
+  pointer-events: none;
+  text-anchor: middle;
+}
+.edge-label.dimmed     { opacity: 0.05; }
+.edge-label.highlighted { fill: #c8f135; }
+
+/* ── Tooltip ── */
+#tooltip {
+  position: absolute;
+  background: rgba(0,0,0,0.85);
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  pointer-events: none;
+  display: none;
+  max-width: 220px;
+  line-height: 1.5;
+  color: #eee;
+}
