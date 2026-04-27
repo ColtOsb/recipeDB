@@ -1,0 +1,22 @@
+services:
+  db:
+    image: mariadb:10.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: recipedb
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/recipedb_dump.sql:/docker-entrypoint-initdb.d/01_dump.sql
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  db_data:
