@@ -25,6 +25,7 @@ header p  { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
   gap: 10px;
   padding: 10px 16px;
   background: #16213e;
+  color: white;
   border-bottom: 1px solid #0f3460;
   flex-shrink: 0;
 }
@@ -92,6 +93,70 @@ header p  { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
 }
 .edge-label.dimmed     { opacity: 0.05; }
 .edge-label.highlighted { fill: #c8f135; }
+
+/* ── Page nav ── */
+.page-nav {
+  display: flex;
+  gap: 0;
+  background: #0f3460;
+  flex-shrink: 0;
+}
+.page-nav a {
+  padding: 8px 20px;
+  color: #aac4e8;
+  text-decoration: none;
+  font-size: 0.82rem;
+  border-right: 1px solid #1a4a80;
+  transition: background 0.15s;
+}
+.page-nav a:hover { background: #1a4a80; color: #fff; }
+.page-nav a.active { background: #2c5f2d; color: #fff; }
+
+/* ── Ingredient search suggestions ── */
+.search-wrapper {
+  position: relative;
+}
+#search-suggestions {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  background: #1a1a2e;
+  border: 1px solid #0f3460;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  list-style: none;
+  min-width: 240px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+#search-suggestions li {
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  color: #ddd;
+  cursor: pointer;
+  border-bottom: 1px solid #16213e;
+}
+#search-suggestions li:last-child { border-bottom: none; }
+#search-suggestions li:hover { background: #0f3460; color: #fff; }
+
+/* ── Co-occurrence controls extras ── */
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #ccc;
+  white-space: nowrap;
+}
+.controls input[type="range"] {
+  width: 90px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
 
 /* ── Tooltip ── */
 #tooltip {

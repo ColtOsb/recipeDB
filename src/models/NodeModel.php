@@ -77,6 +77,170 @@ class NodeModel
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
+    public function searchRecipes(string $query): array
+    {
+        $sql = "SELECT r.node_id, r.title
+                FROM recipe_details r
+                JOIN node n ON r.node_id = n.node_id
+                WHERE n.node_type = 'recipe'
+                  AND r.title LIKE ?
+                ORDER BY r.title
+                LIMIT 20";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("NodeModel::searchRecipes prepare error: " . $this->db->error);
+            return [];
+        }
+        $like = "%$query%";
+        $stmt->bind_param("s", $like);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getInfluenceNetwork(int $recipeId): array
+    {
+        $sql = "WITH ingredient_counts AS (
+                    SELECT source_id AS recipe_id,
+                           COUNT(*) AS ing_count
+                    FROM edge
+                    WHERE edge_type = 'contains'
+                    GROUP BY source_id
+                ),
+                complex_recipes AS (
+                    SELECT recipe_id
+                    FROM (
+                        SELECT recipe_id,
+                               NTILE(4) OVER (ORDER BY ing_count) AS quartile
+                        FROM ingredient_counts
+                    ) ranked
+                    WHERE quartile = 4
+                )
+                SELECT rd.title AS influenced_recipe,
+                       cr.recipe_id,
+                       COUNT(*) AS shared_ingredients
+                FROM complex_recipes cr
+                JOIN edge e1 ON e1.source_id = cr.recipe_id
+                             AND e1.edge_type = 'contains'
+                JOIN edge e2 ON e2.target_id = e1.target_id
+                             AND e2.edge_type = 'contains'
+                             AND e2.source_id != cr.recipe_id
+                JOIN recipe_details rd ON rd.node_id = cr.recipe_id
+                WHERE e2.source_id = ?
+                GROUP BY cr.recipe_id, rd.title
+                HAVING COUNT(*) >= 2
+                ORDER BY shared_ingredients DESC
+                LIMIT 15";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("NodeModel::getInfluenceNetwork prepare error: " . $this->db->error);
+            return [];
+        }
+        $stmt->bind_param("i", $recipeId);
+        $stmt->execute();
+        if ($stmt->error) {
+            error_log("NodeModel::getInfluenceNetwork execute error: " . $stmt->error);
+            return [];
+        }
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getAccessibilityIndex(): array
+    {
+        $sql = "WITH popular AS (
+                    SELECT target_id
+                    FROM edge
+                    WHERE edge_type = 'contains'
+                    GROUP BY target_id
+                    HAVING COUNT(*) >= 10
+                ),
+                recipe_popular_counts AS (
+                    SELECT e.source_id AS recipe_id,
+                           e.target_id AS ingredient_id,
+                           COUNT(*) OVER (
+                               PARTITION BY e.source_id
+                           ) AS popular_count
+                    FROM edge e
+                    JOIN popular p ON p.target_id = e.target_id
+                    WHERE e.edge_type = 'contains'
+                )
+                SELECT i.name,
+                       COUNT(*) AS accessibility_index
+                FROM recipe_popular_counts rpc
+                JOIN ingredient_details i ON i.node_id = rpc.ingredient_id
+                WHERE rpc.popular_count >= 5
+                GROUP BY rpc.ingredient_id, i.name
+                HAVING COUNT(*) >= 5
+                ORDER BY accessibility_index DESC
+                LIMIT 100";
+
+        $result = $this->db->query($sql);
+        if (!$result) {
+            error_log("NodeModel::getAccessibilityIndex error: " . $this->db->error);
+            return [];
+        }
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function searchIngredients(string $query): array
+    {
+        $sql = "SELECT i.node_id, i.name, COALESCE(i.category, '') AS category
+                FROM ingredient_details i
+                JOIN node n ON i.node_id = n.node_id
+                WHERE n.node_type = 'ingredient'
+                  AND i.name LIKE ?
+                ORDER BY i.name
+                LIMIT 20";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("NodeModel::searchIngredients prepare error: " . $this->db->error);
+            return [];
+        }
+        $like = "%$query%";
+        $stmt->bind_param("s", $like);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getCooccurrence(int $ingredientId, int $minCount, int $limit): array
+    {
+        $sql = "SELECT
+                    i2.node_id      AS partner_id,
+                    i2.name         AS partner_name,
+                    COALESCE(i2.category, '') AS partner_category,
+                    COUNT(DISTINCT e1.source_id) AS co_occurrence_count
+                FROM edge e1
+                INNER JOIN node n_recipe ON e1.source_id = n_recipe.node_id
+                                        AND n_recipe.node_type = 'recipe'
+                INNER JOIN edge e2       ON e1.source_id = e2.source_id
+                                        AND e2.edge_type = 'contains'
+                                        AND e2.target_id != e1.target_id
+                INNER JOIN node n2       ON e2.target_id = n2.node_id
+                                        AND n2.node_type = 'ingredient'
+                INNER JOIN ingredient_details i2 ON e2.target_id = i2.node_id
+                WHERE e1.edge_type = 'contains'
+                  AND e1.target_id = ?
+                GROUP BY i2.node_id, i2.name, i2.category
+                HAVING COUNT(DISTINCT e1.source_id) >= ?
+                ORDER BY co_occurrence_count DESC
+                LIMIT ?";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("NodeModel::getCooccurrence prepare error: " . $this->db->error);
+            return [];
+        }
+        $stmt->bind_param("iii", $ingredientId, $minCount, $limit);
+        $stmt->execute();
+        if ($stmt->error) {
+            error_log("NodeModel::getCooccurrence execute error: " . $stmt->error);
+            return [];
+        }
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
     public function getEdges(int $id): array
     {
         $sql = "SELECT e.edge_id, e.edge_type, e.source_id,

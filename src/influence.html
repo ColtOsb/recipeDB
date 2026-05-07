@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Influence Network — Recipe Graph DB</title>
+        <link rel="stylesheet" href="public/css/style.css" />
+    </head>
+    <body>
+        <header>
+            <h1>Recipe Graph Database</h1>
+            <p>CS-3600 — Blondell &amp; Osborn</p>
+        </header>
+
+        <nav class="page-nav">
+            <a href="index.html">Graph Explorer</a>
+            <a href="cooccurrence.html">Ingredient Co-occurrence</a>
+            <a href="accessibility.html">Accessibility Index</a>
+            <a href="influence.html" class="active">Influence Network</a>
+        </nav>
+
+        <div class="controls">
+            <div class="search-wrapper">
+                <input
+                    type="text"
+                    id="recipe-search"
+                    placeholder="Search for a seed recipe..."
+                    autocomplete="off"
+                />
+                <ul id="search-suggestions"></ul>
+            </div>
+            <span id="status" style="color:lightgray">
+                Search for a recipe to see which high-complexity recipes it influences
+            </span>
+        </div>
+
+        <div id="graph-container">
+            <svg id="graph"></svg>
+            <div id="tooltip"></div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+        <script src="scripts/influence.js"></script>
+    </body>
+</html>

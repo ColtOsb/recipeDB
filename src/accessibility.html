@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Accessibility Index — Recipe Graph DB</title>
+        <link rel="stylesheet" href="public/css/style.css" />
+        <style>
+            #chart-container {
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding: 16px 24px;
+                background: #fdfdfd;
+            }
+            .bar { fill: #c0782a; transition: fill 0.15s; }
+            .bar:hover { fill: #e8923a; }
+            .bar-label {
+                font-size: 11px;
+                fill: #333;
+                dominant-baseline: middle;
+            }
+            .axis-y text { font-size: 12px; fill: #111; }
+            .axis-x text { font-size: 11px; fill: #555; }
+            .axis-x .domain, .axis-y .domain { stroke: #ccc; }
+            .axis-x line, .axis-y line { stroke: #eee; }
+            #chart-status {
+                font-size: 0.78rem;
+                color: #888;
+                margin-left: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Recipe Graph Database</h1>
+            <p>CS-3600 — Blondell &amp; Osborn</p>
+        </header>
+
+        <nav class="page-nav">
+            <a href="index.html">Graph Explorer</a>
+            <a href="cooccurrence.html">Ingredient Co-occurrence</a>
+            <a href="accessibility.html" class="active">Accessibility Index</a>
+            <a href="influence.html">Influence Network</a>
+        </nav>
+
+        <div class="controls">
+            <span style="color:#ccc; font-size:0.85rem;">
+                Ingredients appearing in ≥ 5 recipes that each contain ≥ 5 popular ingredients
+            </span>
+            <span id="chart-status" style="color:lightgray">Loading…</span>
+        </div>
+
+        <div id="chart-container"></div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+        <script src="scripts/accessibility.js"></script>
+    </body>
+</html>

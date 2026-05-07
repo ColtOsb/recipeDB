@@ -45,6 +45,48 @@ class NodeController
                 echo json_encode($this->model->getEdges($id));
                 break;
 
+            case "recipe_search":
+                $q = trim($_GET["q"] ?? "");
+                if (strlen($q) < 2) {
+                    echo json_encode([]);
+                    break;
+                }
+                echo json_encode($this->model->searchRecipes($q));
+                break;
+
+            case "influence_network":
+                $recipeId = intval($_GET["recipe_id"] ?? 0);
+                if ($recipeId <= 0) {
+                    echo json_encode(["error" => "Invalid recipe_id"]);
+                    break;
+                }
+                echo json_encode($this->model->getInfluenceNetwork($recipeId));
+                break;
+
+            case "accessibility_index":
+                echo json_encode($this->model->getAccessibilityIndex());
+                break;
+
+            case "ingredient_search":
+                $q = trim($_GET["q"] ?? "");
+                if (strlen($q) < 2) {
+                    echo json_encode([]);
+                    break;
+                }
+                echo json_encode($this->model->searchIngredients($q));
+                break;
+
+            case "ingredient_cooccurrence":
+                $ingredientId = intval($_GET["ingredient_id"] ?? 0);
+                $minCount     = max(1, intval($_GET["min_count"] ?? 2));
+                $limit        = min(100, max(1, intval($_GET["limit"] ?? 60)));
+                if ($ingredientId <= 0) {
+                    echo json_encode(["error" => "Invalid ingredient_id"]);
+                    break;
+                }
+                echo json_encode($this->model->getCooccurrence($ingredientId, $minCount, $limit));
+                break;
+
             default:
                 http_response_code(400);
                 echo json_encode(["error" => "Unknown action"]);
