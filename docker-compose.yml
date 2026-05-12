@@ -8,7 +8,12 @@ services:
       MYSQL_DATABASE: recipedb
     volumes:
       - db_data:/var/lib/mysql
-      - ./database/recipedb_dump.sql:/docker-entrypoint-initdb.d/01_dump.sql
+      - ./database/recipedb_dump.sql:/docker-entrypoint-initdb.d/01_dump.sql:z
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   app:
     build: .
@@ -16,7 +21,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   db_data:

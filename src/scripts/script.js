@@ -57,6 +57,12 @@ function drawGraph(nodes, edges) {
 
   if (nodes.length === 0) return;
 
+  if (edges.length > 0 && nodes.length > 100) {
+    document.getElementById("node-count").textContent =
+      `Too many connections to display (${nodes.length} nodes). Try a more specific node.`;
+    return;
+  }
+
   // ── Grid Layout for Search Results (No Edges) ──
   if (edges.length === 0) {
     const cols = Math.ceil(Math.sqrt(nodes.length));
@@ -82,20 +88,18 @@ function drawGraph(nodes, edges) {
   }
 
   // ── Tree Layout for Connections ──
-  // We treat the first node (the one clicked) as the root
   const rootNode = nodes[0];
 
-  // Build an adjacency list
+  // Build a BIDIRECTIONAL adjacency list
   const adj = new Map();
   nodes.forEach((n) => adj.set(n.node_id, []));
   edges.forEach((e) => {
-    // Ensure we only map edges between nodes we actually have in our list
     if (adj.has(e.source_id) && adj.has(e.target_id)) {
       adj.get(e.source_id).push({ to: e.target_id, label: e.edge_type });
+      adj.get(e.target_id).push({ to: e.source_id, label: e.edge_type });
     }
   });
 
-  // Convert flat data to D3 hierarchy
   function getChildren(id, visited = new Set()) {
     visited.add(id);
     const children = [];
@@ -123,7 +127,6 @@ function drawGraph(nodes, edges) {
   const treeLayout = d3.tree().size([width - 200, height - 200]);
   treeLayout(root);
 
-  // Center the tree in the view
   const offsetX = 100;
   const offsetY = 50;
 
@@ -137,8 +140,7 @@ function drawGraph(nodes, edges) {
     .attr("stroke", "#ccc")
     .attr(
       "d",
-      d3
-        .linkVertical()
+      d3.linkVertical()
         .x((d) => d.x + offsetX)
         .y((d) => d.y + offsetY),
     );
